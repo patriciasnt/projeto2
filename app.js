@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 const formidableMiddleware = require('express-formidable');
 const app = express();
 const path = require("path"); //manipulacao de diretorios
-
+require('dotenv').config();
 
 
 //chamando o banco
@@ -39,7 +39,7 @@ app.set('view engine', 'handlebars');
 
 // Mongoose
 mongoose.Promise = global.Promise;
-mongoose.connect("mongodb://localhost/cadastro").then(() => {
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/cadastro").then(() => {
   console.log("MongoDB conectado");
 }).catch((err) => {
   console.log("Houve um erro ao se conectar ao mongoDB: "+err);
@@ -225,7 +225,8 @@ app.post("/createUser", async (req, res) => {
 
 
 //outros
-const PORT = 8081;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT,() => {
-  console.log("Servidor rodando");
+  console.log("Servidor rodando na porta" + PORT);
 })
+
