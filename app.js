@@ -23,12 +23,12 @@ const Postagem = mongoose.model('postagens'); //tabela postagem
 //body Parser
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-// app.use(formidableMiddleware({
-//   encoding: 'utf-8',
-//   uploadDir: './public/imgs/',
-//   multiples: false,
-//   keepExtensions: true
-// }));
+app.use(formidableMiddleware({
+  encoding: 'utf-8',
+  uploadDir: './public/upload/',
+  multiples: false,
+  keepExtensions: true
+}));
 
 // initialize cookie-parser to allow us access the cookies stored in the browser.
 app.use(cookieParser());
@@ -139,16 +139,16 @@ app.post("/noticias", (req, res) => {
 ////////////////
 app.post("/singIn",function(req, res){
   // Verifica se algum dos parametros vindos da requisição é null, undefined ou vazio
-  if (!req.body.senha_login || !req.body.email_login) {
+  if (!req.fields.senha_login || !req.fields.email_login) {
     console.log("Algo deu errado");
     res.sendFile(__dirname + "/views/login.html");
   } else {
     // Busca pelo email digitado no banco
-    Usuarios.where({ email: req.body.email_login }).findOne(function (err, user) {
+    Usuarios.where({ email: req.fields.email_login }).findOne(function (err, user) {
       // Caso o usuário exista
       if (user) {
         // Compara a senha digitada com o hash do banco
-        bcrypt.compare(req.body.senha_login, user.senha, function(err, result) {
+        bcrypt.compare(req.fields.senha_login, user.senha, function(err, result) {
           if (err) {
             console.log("Algo deu errado");
             res.sendFile(__dirname + "/views/error.html");
@@ -174,13 +174,14 @@ app.post("/singIn",function(req, res){
 
 // Rota de cadastro - Register route
 app.post("/createUser", async (req, res) => {
+  console.log(req.fields);
   // Verifica se algum dos parametros vindos da requisição é null, undefined ou vazio
-  if (!req.body.nome_cad || !req.body.email_cad || !req.body.senha_cad) {
+  if (!req.fields.nome_cad || !req.fields.email_cad || !req.fields.senha_cad) {
     console.log("Algo deu errado");
     res.sendFile(__dirname + "/views/error.html");
   } else {
     // Caso esteja tudo ok com os dados vindos do front, encripta a senha
-    await bcrypt.hash(req.body.senha_cad, 10, function(err, hash) {
+    await bcrypt.hash(req.fields.senha_cad, 10, function(err, hash) {
       if (err) {
         // Caso tenha ocorrido algum erro ao criar o hash de senha, redireciona para a página de erro.
         console.log("Erro ao cadastrar usuario!");
@@ -188,20 +189,20 @@ app.post("/createUser", async (req, res) => {
       }
       // Cria um objeto com as informações vindas do front
       const newUser = {
-        nome: req.body.nome_cad,
-        email: req.body.email_cad,
+        nome: req.fields.nome_cad,
+        email: req.fields.email_cad,
         senha: hash
       }
       // Verifica se o nome de usuário já está em uso.
       // OBS.: Não precisavamos fazer isso, o banco já faz isso, só fazemos está verificação para informar melhor o erro ao usuário.
-      Usuarios.where({ nome: req.body.nome_cad }).findOne(function (err, user) {
+      Usuarios.where({ nome: req.fields.nome_cad }).findOne(function (err, user) {
         if (user) {
           console.log("Erro ao cadastrar usuario! Nome já em uso");
           res.sendFile(__dirname + "/views/inUseError.html");
         } else {
           // Caso esteja tudo ok com o nome de usuário, verifica se o email já está em uso.
           // OBS.: Não precisavamos fazer isso, o banco já faz isso, só fazemos está verificação para informar melhor o erro ao usuário.
-          Usuarios.where({ email: req.body.email_cad }).findOne(function (err, user) {
+          Usuarios.where({ email: req.fields.email_cad }).findOne(function (err, user) {
             if (user) {
               console.log("Erro ao cadastrar usuario! Email já em uso");
               res.sendFile(__dirname + "/views/inUseError.html");
@@ -229,4 +230,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT,() => {
   console.log("Servidor rodando na porta" + PORT);
 })
-
